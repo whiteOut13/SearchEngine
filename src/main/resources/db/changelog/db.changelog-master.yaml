@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/1-create-table-site.yaml
+  - include:
+      file: db/changelog/changes/2-create-table-page.yaml
+  - include:
+      file: db/changelog/changes/3-create-table-lemma.yaml
+  - include:
+      file: db/changelog/changes/4-create-table-index.yaml

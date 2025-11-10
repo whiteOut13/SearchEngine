@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3-create-table-lemma
+      author: liquibase_white
+      changes:
+        - createTable:
+            tableName: lemma
+            columns:
+              - column:
+                  name: lemma_id
+                  type: BIGINT
+                  autoIncrement: TRUE
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: site_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lemma
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: frequency
+                  type: INT
+                  constraints:
+                    nullable: false
+
+
+        - addForeignKeyConstraint:
+            baseTableName: lemma
+            baseColumnNames: site_id
+            constraintName: fk_lemma_site
+            referencedTableName: site
+            referencedColumnNames: site_id

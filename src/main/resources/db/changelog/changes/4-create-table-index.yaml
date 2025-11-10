@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4-create-table-index
+      author: liquibase_white
+      changes:
+        - createTable:
+            tableName: index
+            columns:
+              - column:
+                  name: index_id
+                  type: BIGINT
+                  autoIncrement: TRUE
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: page_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lemma_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rank
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: index
+            baseColumnNames: page_id
+            constraintName: fk_index_page
+            referencedTableName: page
+            referencedColumnNames: page_id
+
+        - addForeignKeyConstraint:
+            baseTableName: index
+            baseColumnNames: lemma_id
+            constraintName: fk_index_lemma
+            referencedTableName: lemma
+            referencedColumnNames: lemma_id
+
+

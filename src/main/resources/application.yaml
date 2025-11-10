@@ -1,0 +1,34 @@
+indexing-settings:
+  sites:
+    - url: https://www.lenta.ru
+      name: Лента.ру
+    - url: https://www.skillbox.ru
+      name: Skillbox
+    - url: https://www.playback.ru
+      name: PlayBack.Ru
+    - url: https://pitaysya.ru/
+      name: Pitaysya.ru
+
+search-engine:
+  user-agent: "HeliontSearchBot/1.0"
+  referrer: "https://www.google.com"
+  delay-min-ms: 500
+  delay-max-ms: 5000
+
+server:
+  port: 8080
+
+spring:
+  datasource:
+    username: ${USER}
+    password: ${PASSWORD}
+    url: jdbc:postgresql://localhost:5432/search_engine_db
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
