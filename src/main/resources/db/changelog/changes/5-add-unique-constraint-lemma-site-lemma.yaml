@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-unique-constraint-lemma-site-lemma
+      author: white
+      changes:
+        - addUniqueConstraint:
+            columnNames: site_id, lemma
+            constraintName: uk_lemma_site_lemma
+            tableName: lemma

@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/changes/3-create-table-lemma.yaml
   - include:
       file: db/changelog/changes/4-create-table-index.yaml
+  - include:
+      file: db/changelog/changes/5-add-unique-constraint-lemma-site-lemma.yaml

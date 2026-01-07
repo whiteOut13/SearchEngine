@@ -1,13 +1,9 @@
 indexing-settings:
   sites:
-    - url: https://www.lenta.ru
-      name: Лента.ру
-    - url: https://www.skillbox.ru
-      name: Skillbox
-    - url: https://www.playback.ru
-      name: PlayBack.Ru
-    - url: https://pitaysya.ru/
-      name: Pitaysya.ru
+     - url: https://www.playback.ru
+       name: PlayBack.Ru
+     - url: https://pitaysya.ru/
+       name: Pitaysya.ru
 
 search-engine:
   user-agent: "HeliontSearchBot/1.0"
@@ -20,9 +16,9 @@ server:
 
 spring:
   datasource:
-    username: ${USER}
-    password: ${PASSWORD}
-    url: jdbc:postgresql://localhost:5432/search_engine_db
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    url: ${DB_URL}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -32,3 +28,6 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
+
+  config:
+    import: optional:file:.env[.properties]
