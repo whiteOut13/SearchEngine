@@ -3,10 +3,12 @@ package searchengine.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 import searchengine.dto.search.SearchResponse;
 import searchengine.dto.search.SearchResultItem;
+import searchengine.exceptions.EmptyUrlException;
 import searchengine.model.IndexEntity;
 import searchengine.model.IndexingStatus;
 import searchengine.model.LemmaEntity;
@@ -19,6 +21,8 @@ import searchengine.repositories.SiteRepository;
 import searchengine.services.lemma.LemmaService;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,9 +43,9 @@ public class SearchServiceImpl implements SearchService {
         SearchResponse response = new SearchResponse();
 
         if (query == null || query.trim().isEmpty()) {
-            response.setResult(false);
-            response.setError("Задан пустой поисковый запрос");
-            return response;
+            // response.setResult(false);
+            // response.setError("Задан пустой поисковый запрос");
+            throw new EmptyUrlException("Задан пустой поисковый запрос");
         }
 
         // Проверка: есть ли хотя бы один проиндексированный сайт?
@@ -107,7 +111,8 @@ public class SearchServiceImpl implements SearchService {
         for (int i = 1; i < filteredLemmas.size(); i++) {
             List<Long> nextPageIds = indexRepository.findPageIdsByLemmaId(filteredLemmas.get(i).getId());
             pageIds.retainAll(nextPageIds);
-            if (pageIds.isEmpty()) break;
+            if (pageIds.isEmpty())
+                break;
         }
 
         if (pageIds.isEmpty()) {
@@ -140,9 +145,11 @@ public class SearchServiceImpl implements SearchService {
         List<SearchResultItem> items = new ArrayList<>();
         for (PageEntity page : pages) {
             Float rel = normalizedRelevance.get(page.getId());
-            if (rel == null) continue;
+            if (rel == null)
+                continue;
 
             String title = extractTitle(page.getContent());
+
             String snippet = extractSnippet(page.getContent(), queryLemmasMap.keySet());
 
             SearchResultItem item = new SearchResultItem();
@@ -158,7 +165,6 @@ public class SearchServiceImpl implements SearchService {
         // Сортировка по релевантности (убывание)
         items.sort((a, b) -> Float.compare(b.getRelevance(), a.getRelevance()));
 
-
         int totalCount = items.size();
         List<SearchResultItem> paginated = items.stream()
                 .skip(offset)
@@ -172,7 +178,8 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private String normalizeUrl(String url) {
-        if (!url.endsWith("/")) url += "/";
+        if (!url.endsWith("/"))
+            url += "/";
         return url;
     }
 
@@ -194,40 +201,85 @@ public class SearchServiceImpl implements SearchService {
         }
     }
 
-    private String extractSnippet(String html, Set<String> lemmas) {
+    private String extractSnippet(String html, Set<String> queryLemmas) {
         try {
-            String text = Jsoup.parse(html).text();
-            if (text.isEmpty()) return "...";
+            String originalText = Jsoup.parse(html).text();
+            if (originalText.isEmpty()) {
+                log.debug("HTML content is empty, returning default snippet.");
+                return "...";
+            }
 
-            // Находим первое вхождение любого слова из запроса (не леммы!)
-            String lowerText = text.toLowerCase();
-            int startPos = -1;
-            for (String lemma : lemmas) {
-                int pos = lowerText.indexOf(lemma.toLowerCase());
-                if (pos != -1 && (startPos == -1 || pos < startPos)) {
-                    startPos = pos;
+            Pattern tokenPattern = Pattern.compile("\\b[\\p{L}\\p{N}]+\\b");
+            Matcher matcher = tokenPattern.matcher(originalText);
+
+            List<TokenWithLemma> tokensWithLemmas = new ArrayList<>();
+            while (matcher.find()) {
+                String token = matcher.group();
+                int start = matcher.start();
+                int end = matcher.end();
+
+                Map<String, Integer> tokenLemmaMap = lemmaService.getLemmas(token);
+                String tokenLemma = null;
+                if (!tokenLemmaMap.isEmpty()) {
+                    tokenLemma = tokenLemmaMap.keySet().iterator().next();
                 }
+
+                tokensWithLemmas.add(new TokenWithLemma(token, start, end, tokenLemma));
             }
 
-            if (startPos == -1) {
-                startPos = 0;
+            List<TokenWithLemma> matchingTokens = tokensWithLemmas.stream()
+                    .filter(t -> t.lemma != null && queryLemmas.contains(t.lemma))
+                    .collect(Collectors.toList());
+
+            int snippetStart = 0;
+            int snippetEnd = originalText.length();
+            if (!matchingTokens.isEmpty()) {
+
+                TokenWithLemma firstMatch = matchingTokens.get(0);
+                int matchStartPos = firstMatch.startPos;
+
+                snippetStart = Math.max(0, matchStartPos - 50);
+
+                snippetEnd = Math.min(originalText.length(), matchStartPos + 150);
+            } else {
+
+                snippetEnd = Math.min(originalText.length(), 200);
             }
 
-            int snippetStart = Math.max(0, startPos - 50);
-            int snippetEnd = Math.min(text.length(), startPos + 150);
-            String snippet = text.substring(snippetStart, snippetEnd);
+            String snippetText = originalText.substring(snippetStart, snippetEnd);
+            Set<String> termsToHighlight = matchingTokens.stream()
+                    .map(t -> t.token)
+                    .collect(Collectors.toSet());
 
-
-            for (String lemma : lemmas) {
-                snippet = snippet.replaceAll(
-                        "(?i)(" + java.util.regex.Pattern.quote(lemma) + ")",
-                        "<b>$1</b>"
+            String highlightedSnippet = snippetText;
+            for (String term : termsToHighlight) {
+                String escapedTerm = java.util.regex.Pattern.quote(term);
+                highlightedSnippet = highlightedSnippet.replaceAll(
+                        "\\b(?i)" + escapedTerm + "\\b",
+                        "<b>$0</b>" //
                 );
             }
 
-            return snippet.trim();
+            return Jsoup.clean(highlightedSnippet, Safelist.simpleText()).trim();
+
         } catch (Exception e) {
+            log.error("Ошибка обработки фрагмента HTML: {}", html.substring(0, Math.min(100, html.length())), e);
             return "Текст недоступен";
+        }
+    }
+
+    // Вспомогательный класс для хранения токена, его позиции и леммы
+    private static class TokenWithLemma {
+        final String token;
+        final int startPos;
+        final int endPos;
+        final String lemma;
+
+        TokenWithLemma(String token, int startPos, int endPos, String lemma) {
+            this.token = token;
+            this.startPos = startPos;
+            this.endPos = endPos;
+            this.lemma = lemma;
         }
     }
 }

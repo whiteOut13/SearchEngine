@@ -1,7 +1,7 @@
 indexing-settings:
   sites:
-     - url: https://www.playback.ru
-       name: PlayBack.Ru
+    #  - url: https://www.playback.ru
+    #    name: PlayBack.Ru
      - url: https://pitaysya.ru/
        name: Pitaysya.ru
 

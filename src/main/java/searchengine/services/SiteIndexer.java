@@ -5,14 +5,11 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Set;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.stream.Collectors;
-
-import javax.transaction.Transactional;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -246,9 +243,8 @@ public class SiteIndexer {
                     subtasks.add(new ParseHtml(href, siteEntity, visited));
                 }
 
-                
                 List<ForkJoinTask<Void>> forkedTasks = new ArrayList<>();
-                
+
                 for (ParseHtml subtask : subtasks) {
                     subtask.fork();
                     forkedTasks.add(subtask);
@@ -256,7 +252,7 @@ public class SiteIndexer {
 
                 for (ForkJoinTask<Void> forkedTask : forkedTasks) {
                     try {
-                        forkedTask.join(); 
+                        forkedTask.join();
                     } catch (RuntimeException e) {
                         log.warn("Подзадача завершена с ошибкой: {}", e.getMessage(), e);
                     }

@@ -14,6 +14,7 @@ import searchengine.config.SitesList;
 import searchengine.dto.Indexing.IndexingResponse;
 import searchengine.exceptions.IndexingAlreadyStartedException;
 import searchengine.exceptions.IndexingNotStartedException;
+import searchengine.exceptions.PageOutsideSitesException;
 import searchengine.model.IndexEntity;
 import searchengine.model.IndexingStatus;
 import searchengine.model.LemmaEntity;
@@ -106,8 +107,9 @@ public class IndexingServiceImpl implements IndexingService {
                 .orElse(null);
 
         if (allowedConfigSite == null) {
-            return new IndexingResponse(false,
-                    "Данная страница находится за пределами сайтов, указанных в конфигурационном файле");
+            throw new PageOutsideSitesException(
+                "Данная страница находится за пределами сайтов, указанных в конфигурационном файле"
+            );
         }
 
         try {

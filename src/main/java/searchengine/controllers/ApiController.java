@@ -24,36 +24,32 @@ public class ApiController {
     private final SearchService searchService;
 
     @GetMapping("/statistics")
-    public ResponseEntity<StatisticsResponse> statistics() {
-        return ResponseEntity.ok(statisticsService.getStatistics());
+    public StatisticsResponse statistics() {
+        return statisticsService.getStatistics();
     }
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<IndexingResponse> startIndexing() {
-        return ResponseEntity.ok(indexingService.startIndexing());
+    public IndexingResponse startIndexing() {
+        return indexingService.startIndexing();
     }
 
     @GetMapping("/stopIndexing")
-    public ResponseEntity<IndexingResponse> stopIndexing() {
-        return ResponseEntity.ok(indexingService.stopIndexing());
+    public IndexingResponse stopIndexing() {
+        return indexingService.stopIndexing();
     }
 
     @PostMapping("/indexPage")
-    public ResponseEntity<IndexingResponse> indexPage(@RequestParam String path) {
-        return ResponseEntity.ok(indexingService.indexSinglePage(path));
+    public IndexingResponse indexPage(@RequestParam String path) {
+        return indexingService.indexSinglePage(path);
     }
 
-        @GetMapping("/search")
-    public ResponseEntity<SearchResponse> search(
+    @GetMapping("/search")
+    public SearchResponse search(
             @RequestParam String query,
             @RequestParam(required = false) String site,
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "20") int limit) {
-
-        SearchResponse response = searchService.search(query.trim(), site, offset, limit);
-        if (!response.isResult()) {
-            return ResponseEntity.badRequest().body(response);
-        }
-        return ResponseEntity.ok(response);
+                
+        return searchService.search(query.trim(), site, offset, limit);
     }
 }

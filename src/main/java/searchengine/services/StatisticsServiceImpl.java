@@ -2,7 +2,6 @@ package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import searchengine.config.SitesList;
 import searchengine.dto.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.StatisticsData;
 import searchengine.dto.statistics.StatisticsResponse;
@@ -15,15 +14,12 @@ import searchengine.repositories.SiteRepository;
 
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
 
-    private final Random random = new Random();
-    private final SitesList sites;
     private final SiteRepository siteRepository;
     private final PageRepository pageRepository;
     private final LemmaRepository lemmaRepository;
