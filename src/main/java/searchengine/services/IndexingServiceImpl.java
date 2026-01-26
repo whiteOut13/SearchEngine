@@ -96,6 +96,8 @@ public class IndexingServiceImpl implements IndexingService {
     @Override
     @Transactional
     public IndexingResponse indexSinglePage(String url) {
+        log.info("Запуск переиндексации: " + url);
+
         if (url == null || url.isBlank()) {
             return new IndexingResponse(false, "URL не может быть пустым");
         }
@@ -153,7 +155,7 @@ public class IndexingServiceImpl implements IndexingService {
             Map<String, Integer> lemmas = lemmaService.getLemmas(text);
             saveLemmasForPage(page, lemmas);
 
-            log.info("Переиндексация страницы: " + url);
+            log.info("Страница переиндексирована: " + url);
             return new IndexingResponse(true, null);
 
         } catch (IOException e) {

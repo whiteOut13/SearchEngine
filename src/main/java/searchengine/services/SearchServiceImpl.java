@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import searchengine.dto.search.SearchResponse;
 import searchengine.dto.search.SearchResultItem;
 import searchengine.exceptions.EmptyUrlException;
+import searchengine.exceptions.NoIndexedSitesException;
+import searchengine.exceptions.NoMatchingWordsException;
 import searchengine.model.IndexEntity;
 import searchengine.model.IndexingStatus;
 import searchengine.model.LemmaEntity;
@@ -51,17 +53,13 @@ public class SearchServiceImpl implements SearchService {
         // Проверка: есть ли хотя бы один проиндексированный сайт?
         boolean hasIndexed = siteRepository.existsByIndexingStatus(IndexingStatus.INDEXED);
         if (!hasIndexed) {
-            response.setResult(false);
-            response.setError("Нет проиндексированных сайтов");
-            return response;
+            throw new NoIndexedSitesException("Нет проиндексированных сайтов");
         }
 
         // Получаем леммы запроса
         Map<String, Integer> queryLemmasMap = lemmaService.getLemmas(query);
         if (queryLemmasMap.isEmpty()) {
-            response.setResult(false);
-            response.setError("Не найдено подходящих слов для поиска");
-            return response;
+            throw new NoMatchingWordsException("Не найдено подходящих слов для поиска");
         }
 
         List<String> queryLemmas = new ArrayList<>(queryLemmasMap.keySet());
@@ -73,9 +71,7 @@ public class SearchServiceImpl implements SearchService {
             SiteEntity site = siteRepository.findByUrl(normalizedUrl)
                     .orElse(null);
             if (site == null || site.getIndexingStatus() != IndexingStatus.INDEXED) {
-                response.setResult(false);
-                response.setError("Сайт не проиндексирован или не найден");
-                return response;
+                throw new NoIndexedSitesException("Сайт не проиндексирован или не найден");
             }
             sitesToSearch = List.of(site);
         } else {

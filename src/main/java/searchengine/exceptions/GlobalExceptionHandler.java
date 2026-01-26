@@ -31,4 +31,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<SearchResponse> catchEmptyUrlException(EmptyUrlException e) {
         return new ResponseEntity<>(new SearchResponse(false, e.getMessage()), HttpStatus.BAD_REQUEST);
     }
+
+    public ResponseEntity<SearchResponse> catchNoIndexedSitesException(NoIndexedSitesException e) {
+        return new ResponseEntity<>(new SearchResponse(false, e.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    public ResponseEntity<SearchResponse> catchNoMatchingWordsException(NoMatchingWordsException e) {
+        return new ResponseEntity<>(new SearchResponse(false, e.getMessage()), HttpStatus.BAD_REQUEST);
+    }
 }
