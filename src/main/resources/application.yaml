@@ -1,9 +1,11 @@
 indexing-settings:
   sites:
-    #  - url: https://www.playback.ru
-    #    name: PlayBack.Ru
-     - url: https://pitaysya.ru/
-       name: Pitaysya.ru
+    # - url: https://www.playback.ru
+    #   name: PlayBack.Ru
+    - url: https://pitaysya.ru/
+      name: Pitaysya.ru
+    - url: https://www.skillbox.ru
+      name: Skillbox.ru
 
 search-engine:
   user-agent: "HeliontSearchBot/1.0"
